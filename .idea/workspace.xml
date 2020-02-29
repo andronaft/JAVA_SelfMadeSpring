@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="ff6673ce-5b47-4e6a-834f-376585ad048c" name="Default Changelist" comment="add annotation Component">
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SelfSpring.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/com/zuk/Main.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/com/zuk/ProductService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/com/zuk/PromotionsService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/org/springframework/beans/factory/BeanFactory.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/org/springframework/beans/factory/stereotype/Component.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/zuk/Main.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/zuk/ProductService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/zuk/PromotionsService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/org/springframework/beans/factory/BeanFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/org/springframework/beans/factory/stereotype/Component.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+        <option value="AnnotationType" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="zuk" />
+      </list>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1YUpAO82mKhWcAO8sQpJPn0JG64" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.0" />
+  </component>
+  <component name="RunManager">
+    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.zuk.Main" />
+      <module name="SelfSpring" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.zuk.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Main" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ff6673ce-5b47-4e6a-834f-376585ad048c" name="Default Changelist" comment="" />
+      <created>1583006882223</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1583006882223</updated>
+      <workItem from="1583006887875" duration="4169000" />
+      <workItem from="1583016306526" duration="291000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="add annotation Component" />
+    <option name="LAST_COMMIT_MESSAGE" value="add annotation Component" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="764" y="212" key="#Notifications" timestamp="1583016059325">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state x="764" y="212" key="#Notifications/0.23.2048.1057@0.23.2048.1057" timestamp="1583016059325" />
+    <state x="948" y="247" width="813" height="666" key="#Project_Structure" timestamp="1583006907891">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state x="948" y="247" width="813" height="666" key="#Project_Structure/0.23.2048.1057@0.23.2048.1057" timestamp="1583006907891" />
+    <state x="745" y="150" key="CommitChangelistDialog2" timestamp="1583016609357">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state x="745" y="150" key="CommitChangelistDialog2/0.23.2048.1057@0.23.2048.1057" timestamp="1583016609357" />
+    <state x="1348" y="585" key="Github.CreateGistDialog" timestamp="1583015986403">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state x="1348" y="585" key="Github.CreateGistDialog/0.23.2048.1057@0.23.2048.1057" timestamp="1583015986403" />
+    <state width="1358" height="271" key="GridCell.Tab.0.bottom" timestamp="1583016135388">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state width="1358" height="271" key="GridCell.Tab.0.bottom/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
+    <state width="1358" height="271" key="GridCell.Tab.0.center" timestamp="1583016135388">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state width="1358" height="271" key="GridCell.Tab.0.center/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
+    <state width="1358" height="271" key="GridCell.Tab.0.left" timestamp="1583016135387">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state width="1358" height="271" key="GridCell.Tab.0.left/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135387" />
+    <state width="1358" height="271" key="GridCell.Tab.0.right" timestamp="1583016135388">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state width="1358" height="271" key="GridCell.Tab.0.right/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
+  </component>
+</project>

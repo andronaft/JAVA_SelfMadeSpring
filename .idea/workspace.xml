@@ -1,21 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ff6673ce-5b47-4e6a-834f-376585ad048c" name="Default Changelist" comment="add annotation Component">
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SelfSpring.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/com/zuk/Main.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/com/zuk/ProductService.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/com/zuk/PromotionsService.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/org/springframework/beans/factory/BeanFactory.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/SelfSpring/org/springframework/beans/factory/stereotype/Component.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/com/zuk/Main.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/com/zuk/ProductService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/com/zuk/PromotionsService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/org/springframework/beans/factory/BeanFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/org/springframework/beans/factory/stereotype/Component.java" afterDir="false" />
+    <list default="true" id="ff6673ce-5b47-4e6a-834f-376585ad048c" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/webServers.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,8 +15,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Class" />
         <option value="AnnotationType" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -47,6 +37,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="project.structure.last.edited" value="Modules" />
@@ -96,8 +87,16 @@
       <option name="presentableId" value="Default" />
       <updated>1583006882223</updated>
       <workItem from="1583006887875" duration="4169000" />
-      <workItem from="1583016306526" duration="291000" />
+      <workItem from="1583016306526" duration="1326000" />
     </task>
+    <task id="LOCAL-00001" summary="add annotation Component">
+      <created>1583016846647</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1583016846647</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -108,6 +107,10 @@
     <option name="LAST_COMMIT_MESSAGE" value="add annotation Component" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="837" y="320" width="800" height="622" key="#Deployment" timestamp="1583016828533">
+      <screen x="0" y="23" width="2048" height="1057" />
+    </state>
+    <state x="837" y="320" width="800" height="622" key="#Deployment/0.23.2048.1057@0.23.2048.1057" timestamp="1583016828533" />
     <state x="764" y="212" key="#Notifications" timestamp="1583016059325">
       <screen x="0" y="23" width="2048" height="1057" />
     </state>
@@ -116,10 +119,10 @@
       <screen x="0" y="23" width="2048" height="1057" />
     </state>
     <state x="948" y="247" width="813" height="666" key="#Project_Structure/0.23.2048.1057@0.23.2048.1057" timestamp="1583006907891" />
-    <state x="745" y="150" key="CommitChangelistDialog2" timestamp="1583016609357">
+    <state x="745" y="150" key="CommitChangelistDialog2" timestamp="1583016845021">
       <screen x="0" y="23" width="2048" height="1057" />
     </state>
-    <state x="745" y="150" key="CommitChangelistDialog2/0.23.2048.1057@0.23.2048.1057" timestamp="1583016609357" />
+    <state x="745" y="150" key="CommitChangelistDialog2/0.23.2048.1057@0.23.2048.1057" timestamp="1583016845021" />
     <state x="1348" y="585" key="Github.CreateGistDialog" timestamp="1583015986403">
       <screen x="0" y="23" width="2048" height="1057" />
     </state>

@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ff6673ce-5b47-4e6a-834f-376585ad048c" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/webServers.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/zuk/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/zuk/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,7 +85,8 @@
       <option name="presentableId" value="Default" />
       <updated>1583006882223</updated>
       <workItem from="1583006887875" duration="4169000" />
-      <workItem from="1583016306526" duration="1326000" />
+      <workItem from="1583016306526" duration="3138000" />
+      <workItem from="1584469215618" duration="250000" />
     </task>
     <task id="LOCAL-00001" summary="add annotation Component">
       <created>1583016846647</created>

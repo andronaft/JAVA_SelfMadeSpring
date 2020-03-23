@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ff6673ce-5b47-4e6a-834f-376585ad048c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/zuk/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/zuk/Main.java" afterDir="false" />
-    </list>
+    <list default="true" id="ff6673ce-5b47-4e6a-834f-376585ad048c" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -86,7 +83,7 @@
       <updated>1583006882223</updated>
       <workItem from="1583006887875" duration="4169000" />
       <workItem from="1583016306526" duration="3138000" />
-      <workItem from="1584469215618" duration="250000" />
+      <workItem from="1584469215618" duration="958000" />
     </task>
     <task id="LOCAL-00001" summary="add annotation Component">
       <created>1583016846647</created>
@@ -126,21 +123,29 @@
       <screen x="0" y="23" width="2048" height="1057" />
     </state>
     <state x="1348" y="585" key="Github.CreateGistDialog/0.23.2048.1057@0.23.2048.1057" timestamp="1583015986403" />
-    <state width="1358" height="271" key="GridCell.Tab.0.bottom" timestamp="1583016135388">
-      <screen x="0" y="23" width="2048" height="1057" />
+    <state width="738" height="270" key="GridCell.Tab.0.bottom" timestamp="1584564695608">
+      <screen x="0" y="23" width="2048" height="1056" />
     </state>
+    <state width="738" height="270" key="GridCell.Tab.0.bottom/0.23.2048.1054@0.23.2048.1054" timestamp="1584469627222" />
+    <state width="738" height="270" key="GridCell.Tab.0.bottom/0.23.2048.1056@0.23.2048.1056" timestamp="1584564695608" />
     <state width="1358" height="271" key="GridCell.Tab.0.bottom/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
-    <state width="1358" height="271" key="GridCell.Tab.0.center" timestamp="1583016135388">
-      <screen x="0" y="23" width="2048" height="1057" />
+    <state width="738" height="270" key="GridCell.Tab.0.center" timestamp="1584564695607">
+      <screen x="0" y="23" width="2048" height="1056" />
     </state>
+    <state width="738" height="270" key="GridCell.Tab.0.center/0.23.2048.1054@0.23.2048.1054" timestamp="1584469627221" />
+    <state width="738" height="270" key="GridCell.Tab.0.center/0.23.2048.1056@0.23.2048.1056" timestamp="1584564695607" />
     <state width="1358" height="271" key="GridCell.Tab.0.center/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
-    <state width="1358" height="271" key="GridCell.Tab.0.left" timestamp="1583016135387">
-      <screen x="0" y="23" width="2048" height="1057" />
+    <state width="738" height="270" key="GridCell.Tab.0.left" timestamp="1584564695606">
+      <screen x="0" y="23" width="2048" height="1056" />
     </state>
+    <state width="738" height="270" key="GridCell.Tab.0.left/0.23.2048.1054@0.23.2048.1054" timestamp="1584469627221" />
+    <state width="738" height="270" key="GridCell.Tab.0.left/0.23.2048.1056@0.23.2048.1056" timestamp="1584564695606" />
     <state width="1358" height="271" key="GridCell.Tab.0.left/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135387" />
-    <state width="1358" height="271" key="GridCell.Tab.0.right" timestamp="1583016135388">
-      <screen x="0" y="23" width="2048" height="1057" />
+    <state width="738" height="270" key="GridCell.Tab.0.right" timestamp="1584564695608">
+      <screen x="0" y="23" width="2048" height="1056" />
     </state>
+    <state width="738" height="270" key="GridCell.Tab.0.right/0.23.2048.1054@0.23.2048.1054" timestamp="1584469627222" />
+    <state width="738" height="270" key="GridCell.Tab.0.right/0.23.2048.1056@0.23.2048.1056" timestamp="1584564695608" />
     <state width="1358" height="271" key="GridCell.Tab.0.right/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
   </component>
 </project>

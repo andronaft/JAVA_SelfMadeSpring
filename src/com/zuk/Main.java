@@ -36,4 +36,9 @@ public class Main {
     }
 
 
+    void testContext() throws ReflectiveOperationException{
+        ApplicationContext applicationContext = new ApplicationContext("com.kciray");
+        applicationContext.close();
+    }
+
 }

@@ -2,14 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ff6673ce-5b47-4e6a-834f-376585ad048c" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/javax/annotation/PreDestroy.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/org/springframework/beans/factory/DisposableBean.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/org/springframework/context/ApplicationContext.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/org/springframework/context/ApplicationListener.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/org/springframework/context/event/ContextClosedEvent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/zuk/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/zuk/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/org/springframework/beans/factory/BeanFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/org/springframework/beans/factory/BeanFactory.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +88,7 @@
       <workItem from="1583016306526" duration="3138000" />
       <workItem from="1584469215618" duration="958000" />
       <workItem from="1584991215921" duration="2823000" />
-      <workItem from="1585254141990" duration="11695000" />
+      <workItem from="1585254141990" duration="18005000" />
     </task>
     <task id="LOCAL-00001" summary="add annotation Component">
       <created>1583016846647</created>
@@ -139,37 +132,41 @@
       <screen x="0" y="23" width="2048" height="1057" />
     </state>
     <state x="1348" y="585" key="Github.CreateGistDialog/0.23.2048.1057@0.23.2048.1057" timestamp="1583015986403" />
-    <state width="738" height="264" key="GridCell.Tab.0.bottom" timestamp="1585431534240">
+    <state width="738" height="263" key="GridCell.Tab.0.bottom" timestamp="1585432337644">
       <screen x="0" y="23" width="2048" height="1056" />
     </state>
     <state width="738" height="270" key="GridCell.Tab.0.bottom/0.23.2048.1054@0.23.2048.1054" timestamp="1584469627222" />
-    <state width="738" height="264" key="GridCell.Tab.0.bottom/0.23.2048.1056@0.23.2048.1056" timestamp="1585431534240" />
+    <state width="738" height="263" key="GridCell.Tab.0.bottom/0.23.2048.1056@0.23.2048.1056" timestamp="1585432337644" />
     <state width="1358" height="271" key="GridCell.Tab.0.bottom/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
     <state width="738" height="267" key="GridCell.Tab.0.bottom/0.23.2048.1058@0.23.2048.1058" timestamp="1585258203489" />
-    <state width="738" height="264" key="GridCell.Tab.0.center" timestamp="1585431534239">
+    <state width="738" height="263" key="GridCell.Tab.0.center" timestamp="1585432337643">
       <screen x="0" y="23" width="2048" height="1056" />
     </state>
     <state width="738" height="270" key="GridCell.Tab.0.center/0.23.2048.1054@0.23.2048.1054" timestamp="1584469627221" />
-    <state width="738" height="264" key="GridCell.Tab.0.center/0.23.2048.1056@0.23.2048.1056" timestamp="1585431534239" />
+    <state width="738" height="263" key="GridCell.Tab.0.center/0.23.2048.1056@0.23.2048.1056" timestamp="1585432337643" />
     <state width="1358" height="271" key="GridCell.Tab.0.center/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
     <state width="738" height="267" key="GridCell.Tab.0.center/0.23.2048.1058@0.23.2048.1058" timestamp="1585258203488" />
-    <state width="738" height="264" key="GridCell.Tab.0.left" timestamp="1585431534238">
+    <state width="738" height="263" key="GridCell.Tab.0.left" timestamp="1585432337642">
       <screen x="0" y="23" width="2048" height="1056" />
     </state>
     <state width="738" height="270" key="GridCell.Tab.0.left/0.23.2048.1054@0.23.2048.1054" timestamp="1584469627221" />
-    <state width="738" height="264" key="GridCell.Tab.0.left/0.23.2048.1056@0.23.2048.1056" timestamp="1585431534238" />
+    <state width="738" height="263" key="GridCell.Tab.0.left/0.23.2048.1056@0.23.2048.1056" timestamp="1585432337642" />
     <state width="1358" height="271" key="GridCell.Tab.0.left/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135387" />
     <state width="738" height="267" key="GridCell.Tab.0.left/0.23.2048.1058@0.23.2048.1058" timestamp="1585258203487" />
-    <state width="738" height="264" key="GridCell.Tab.0.right" timestamp="1585431534239">
+    <state width="738" height="263" key="GridCell.Tab.0.right" timestamp="1585432337644">
       <screen x="0" y="23" width="2048" height="1056" />
     </state>
     <state width="738" height="270" key="GridCell.Tab.0.right/0.23.2048.1054@0.23.2048.1054" timestamp="1584469627222" />
-    <state width="738" height="264" key="GridCell.Tab.0.right/0.23.2048.1056@0.23.2048.1056" timestamp="1585431534239" />
+    <state width="738" height="263" key="GridCell.Tab.0.right/0.23.2048.1056@0.23.2048.1056" timestamp="1585432337644" />
     <state width="1358" height="271" key="GridCell.Tab.0.right/0.23.2048.1057@0.23.2048.1057" timestamp="1583016135388" />
     <state width="738" height="267" key="GridCell.Tab.0.right/0.23.2048.1058@0.23.2048.1058" timestamp="1585258203489" />
     <state x="943" y="410" key="com.intellij.ide.util.TipDialog" timestamp="1585254377462">
       <screen x="0" y="23" width="2048" height="1054" />
     </state>
     <state x="943" y="410" key="com.intellij.ide.util.TipDialog/0.23.2048.1054@0.23.2048.1054" timestamp="1585254377462" />
+    <state x="802" y="271" key="new project wizard" timestamp="1585441380304">
+      <screen x="0" y="23" width="2048" height="1056" />
+    </state>
+    <state x="802" y="271" key="new project wizard/0.23.2048.1056@0.23.2048.1056" timestamp="1585441380304" />
   </component>
 </project>

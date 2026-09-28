@@ -14,10 +14,6 @@ public class ProductService {
         return promotionsService;
     }
 
-    public void setPromotionsService(PromotionsService promotionsService){
-        this.promotionsService = promotionsService;
-    }
-
     @PreDestroy
     public void shutdown() {
         System.out.println("ProductService: @PreDestroy called");

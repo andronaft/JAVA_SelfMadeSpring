@@ -1,4 +1,4 @@
-package com.zuk.minispring.fixtures;
+package com.zuk.minispring.fixtures.lifecycle;
 
 import com.zuk.minispring.annotation.Autowired;
 import com.zuk.minispring.annotation.Component;
@@ -6,6 +6,7 @@ import com.zuk.minispring.beans.BeanNameAware;
 import com.zuk.minispring.beans.InitializingBean;
 import com.zuk.minispring.context.ApplicationListener;
 import com.zuk.minispring.context.ContextClosedEvent;
+import com.zuk.minispring.fixtures.LifecycleLog;
 
 @Component
 public class OrderService implements BeanNameAware, InitializingBean, ApplicationListener<ContextClosedEvent> {
@@ -17,10 +18,6 @@ public class OrderService implements BeanNameAware, InitializingBean, Applicatio
 
     public OrderRepository getOrderRepository() {
         return orderRepository;
-    }
-
-    public void setOrderRepository(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
     }
 
     public String getBeanName() {

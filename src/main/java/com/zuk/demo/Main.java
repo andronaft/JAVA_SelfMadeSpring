@@ -7,13 +7,13 @@ public class Main {
 
     private static final String BASE_PACKAGE = "com.zuk.demo";
 
-    public static void main(String[] args) throws ReflectiveOperationException {
+    public static void main(String[] args) {
         runBeanFactoryStepByStep();
         runApplicationContext();
     }
 
     /** Walks through every lifecycle phase manually, with a custom BeanPostProcessor. */
-    private static void runBeanFactoryStepByStep() throws ReflectiveOperationException {
+    private static void runBeanFactoryStepByStep() {
         System.out.println("==== BeanFactory, step by step ====");
         BeanFactory beanFactory = new BeanFactory();
         beanFactory.addPostProcessor(new CustomPostProcessor());
@@ -22,7 +22,7 @@ public class Main {
         beanFactory.injectBeanNames();
         beanFactory.initializeBeans();
 
-        ProductService productService = (ProductService) beanFactory.getBean("ProductService");
+        ProductService productService = beanFactory.getBean(ProductService.class);
         PromotionsService promotionsService = productService.getPromotionsService();
         System.out.println("Injected PromotionsService, bean name: " + promotionsService.getBeanName());
 
@@ -30,12 +30,12 @@ public class Main {
     }
 
     /** The same lifecycle hidden behind an ApplicationContext, plus the ContextClosedEvent on close. */
-    private static void runApplicationContext() throws ReflectiveOperationException {
+    private static void runApplicationContext() {
         System.out.println();
         System.out.println("==== ApplicationContext ====");
-        ApplicationContext context = new ApplicationContext(BASE_PACKAGE);
-        ProductService productService = (ProductService) context.getBean("ProductService");
-        System.out.println("ProductService has PromotionsService: " + (productService.getPromotionsService() != null));
-        context.close();
+        try (ApplicationContext context = new ApplicationContext(BASE_PACKAGE)) {
+            ProductService productService = context.getBean(ProductService.class);
+            System.out.println("ProductService has PromotionsService: " + (productService.getPromotionsService() != null));
+        }
     }
 }

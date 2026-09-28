@@ -1,16 +1,19 @@
 package com.zuk.minispring.context;
 
+import com.zuk.minispring.beans.BeanCreationException;
 import com.zuk.minispring.fixtures.LifecycleLog;
-import com.zuk.minispring.fixtures.OrderRepository;
-import com.zuk.minispring.fixtures.OrderService;
+import com.zuk.minispring.fixtures.lifecycle.OrderRepository;
+import com.zuk.minispring.fixtures.lifecycle.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ApplicationContextTest {
 
-    private static final String FIXTURES = "com.zuk.minispring.fixtures";
+    private static final String LIFECYCLE = "com.zuk.minispring.fixtures.lifecycle";
 
     @BeforeEach
     void setUp() {
@@ -18,24 +21,30 @@ class ApplicationContextTest {
     }
 
     @Test
-    void contextRunsTheWholeLifecycleOnStartup() throws ReflectiveOperationException {
-        ApplicationContext context = new ApplicationContext(FIXTURES);
-
-        OrderService orderService = (OrderService) context.getBean("OrderService");
-        assertInstanceOf(OrderRepository.class, orderService.getOrderRepository());
-        assertEquals("OrderService", orderService.getBeanName());
-        assertTrue(LifecycleLog.events().contains("OrderService.afterPropertiesSet"));
+    void contextRunsTheWholeLifecycleOnStartup() {
+        try (ApplicationContext context = new ApplicationContext(LIFECYCLE)) {
+            OrderService orderService = context.getBean(OrderService.class);
+            assertInstanceOf(OrderRepository.class, orderService.getOrderRepository());
+            assertEquals("OrderService", orderService.getBeanName());
+            assertTrue(LifecycleLog.events().contains("OrderService.afterPropertiesSet"));
+        }
     }
 
     @Test
-    void closeDestroysBeansAndPublishesContextClosedEvent() throws ReflectiveOperationException {
-        ApplicationContext context = new ApplicationContext(FIXTURES);
+    void closePublishesContextClosedEventBeforeDestroyingBeans() {
+        ApplicationContext context = new ApplicationContext(LIFECYCLE);
         LifecycleLog.clear();
 
         context.close();
 
-        assertTrue(LifecycleLog.events().contains("OrderRepository.preDestroy"));
-        assertTrue(LifecycleLog.events().contains("OrderRepository.destroy"));
-        assertTrue(LifecycleLog.events().contains("OrderService.onContextClosed"));
+        assertEquals(List.of("OrderService.onContextClosed", "OrderRepository.preDestroy", "OrderRepository.destroy"),
+                LifecycleLog.events());
+    }
+
+    @Test
+    void startupFailsWithClearErrorWhenDependencyIsMissing() {
+        BeanCreationException e = assertThrows(BeanCreationException.class,
+                () -> new ApplicationContext("com.zuk.minispring.fixtures.missing"));
+        assertTrue(e.getMessage().contains("No bean of type com.zuk.minispring.fixtures.missing.Clock"), e.getMessage());
     }
 }

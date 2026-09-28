@@ -13,35 +13,36 @@ how dependencies get injected, and when each lifecycle callback runs.
 
 | Feature | How it works here |
 |---|---|
-| Component scanning | Finds classes annotated with `@Component` / `@Service` in a package through the class loader |
-| Singleton registry | One instance per bean, stored in a `Map<String, Object>` |
-| Dependency injection | `@Autowired` fields are resolved by type and injected through their setter |
+| Component scanning | Finds `@Component` / `@Service` classes in a package and all its subpackages, in directories and inside JARs |
+| Singleton registry | One instance per bean, looked up by name or by type (`getBean(ProductService.class)`) |
+| Dependency injection | `@Autowired` fields are resolved by type, interfaces included, and set directly (no setter needed) |
+| Clear errors | `NoSuchBeanDefinitionException`, `NoUniqueBeanDefinitionException`, `BeanCreationException` with the bean and field name |
 | `BeanNameAware` | The container passes each bean its own name |
-| `BeanPostProcessor` | Hooks that run before and after bean initialization |
+| `BeanPostProcessor` | Hooks before and after initialization; the returned object replaces the bean, so it can be a proxy |
 | `InitializingBean` | `afterPropertiesSet()` runs once all dependencies are injected |
 | `@PreDestroy` / `DisposableBean` | Cleanup callbacks when the container closes |
-| `ApplicationContext` | Runs the whole lifecycle in one call and publishes `ContextClosedEvent` to `ApplicationListener`s |
+| `ApplicationContext` | Runs the whole lifecycle in one call, is `AutoCloseable`, and publishes `ContextClosedEvent` to `ApplicationListener`s |
 
 ## Bean lifecycle
 
 ```
             ApplicationContext(basePackage)
                           │
-  1. instantiate          │  scan package → find @Component/@Service → call no-arg constructor
+  1. instantiate          │  scan package + subpackages → find @Component/@Service → call no-arg constructor
                           ▼
-  2. populateProperties   │  for each @Autowired field → find bean of that type → call setter
+  2. populateProperties   │  for each @Autowired field → find the one bean assignable to its type → set field
                           ▼
   3. injectBeanNames      │  BeanNameAware.setBeanName(name)
                           ▼
   4. initializeBeans      │  BeanPostProcessor.postProcessBeforeInitialization
                           │  InitializingBean.afterPropertiesSet
-                          │  BeanPostProcessor.postProcessAfterInitialization
+                          │  BeanPostProcessor.postProcessAfterInitialization  (result replaces the bean)
                           ▼
                   ── beans are ready ──
                           │
-  5. close                │  @PreDestroy methods
+  5. close                │  ApplicationListener<ContextClosedEvent>.onApplicationEvent
+                          │  @PreDestroy methods
                           │  DisposableBean.destroy
-                          │  ApplicationListener<ContextClosedEvent>.onApplicationEvent
                           ▼
 ```
 
@@ -61,17 +62,13 @@ public class ProductService {
     @Autowired
     private PromotionsService promotionsService;
 
-    public void setPromotionsService(PromotionsService promotionsService) {
-        this.promotionsService = promotionsService;
-    }
-
     @PreDestroy
     public void shutdown() { /* ... */ }
 }
 
-ApplicationContext context = new ApplicationContext("com.zuk.demo");
-ProductService productService = (ProductService) context.getBean("ProductService");
-context.close();
+try (ApplicationContext context = new ApplicationContext("com.zuk.demo")) {
+    ProductService productService = context.getBean(ProductService.class);
+}
 ```
 
 ## Running
@@ -94,13 +91,20 @@ ProductService: @PreDestroy called
 PromotionsService: received ContextClosedEvent
 ```
 
+It also runs from a packaged JAR:
+
+```bash
+mvn package
+java -cp target/mini-spring-1.0-SNAPSHOT.jar com.zuk.demo.Main
+```
+
 ## Project structure
 
 ```
 src/main/java/com/zuk/
 ├── minispring/
 │   ├── annotation/   @Component, @Service, @Autowired, @PreDestroy
-│   ├── beans/        BeanFactory, BeanPostProcessor, BeanNameAware, InitializingBean, DisposableBean
+│   ├── beans/        BeanFactory, ClassPathScanner, BeanPostProcessor, Aware/Initializing/DisposableBean, exceptions
 │   └── context/      ApplicationContext, ApplicationListener, ContextClosedEvent
 └── demo/             Example application built on the container
 src/test/java/        JUnit 5 tests for every lifecycle phase
@@ -112,11 +116,12 @@ Some parts are simplified on purpose. These are the main differences:
 
 | mini-spring | Spring Framework |
 |---|---|
-| Scans one package, without subpackages, and only from the file system (no JARs) | Recursive classpath scanning, including JARs, via ASM without loading classes |
-| Needs a public no-arg constructor | Constructor injection (the recommended style), factory methods, `@Bean` |
-| Matches `@Autowired` by exact class and needs a setter | Matches by type, including interfaces and subclasses, plus `@Qualifier` / `@Primary`; can inject straight into fields |
+| Loads every scanned class to check its annotations | Reads class files with ASM, so unannotated classes are never loaded |
+| Bean name is the simple class name, so two classes with the same name in different packages conflict | Bean name is the decapitalized class name; conflicts can be resolved with `@Component("name")` |
+| Needs a no-arg constructor | Constructor injection (the recommended style), factory methods, `@Bean` |
+| Fails on several candidates for one `@Autowired` field | Picks one with `@Qualifier` / `@Primary`, or falls back to the field name |
 | Singleton scope only | `singleton`, `prototype`, `request`, `session`, custom scopes |
-| The bean a `BeanPostProcessor` returns is ignored | The returned object replaces the bean, which is how AOP proxies (`@Transactional`, `@Async`) work |
+| Injects all dependencies before any post-processor runs, so dependents get the raw bean, not the proxy | Creates beans on demand in dependency order, so dependents receive the proxy (`@Transactional`, `@Async`) |
 | No detection of circular dependencies | Detects cycles; resolves setter-injection cycles through early references |
 | Bean definitions and instances are the same thing | Uses a separate `BeanDefinition` metadata layer, so beans can be configured before they are created |
 | Supports only `ContextClosedEvent` | A general event system (`ApplicationEventPublisher`, `@EventListener`) |
@@ -124,8 +129,10 @@ Some parts are simplified on purpose. These are the main differences:
 ## Roadmap
 
 - [ ] Constructor injection, with a dependency graph and circular-dependency detection
-- [ ] Injection by interface, plus `@Qualifier` and `@Primary`
-- [ ] Put the bean returned by `BeanPostProcessor` back into the registry, then build a JDK dynamic-proxy based `@Timed` aspect on it
+- [x] Injection by interface; clear `NoSuchBeanDefinitionException` / `NoUniqueBeanDefinitionException`
+- [ ] `@Qualifier` and `@Primary`
+- [x] Put the bean returned by `BeanPostProcessor` back into the registry
+- [ ] A JDK dynamic-proxy based `@Timed` aspect, with dependents receiving the proxy
 - [ ] `@Configuration` + `@Bean`, `@Value("${...}")` from `application.properties`
 - [ ] `prototype` scope
-- [ ] Recursive package scanning that also works inside a JAR
+- [x] Recursive package scanning that also works inside a JAR

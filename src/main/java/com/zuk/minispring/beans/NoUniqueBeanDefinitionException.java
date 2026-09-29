@@ -6,7 +6,11 @@ import java.util.Collection;
 public class NoUniqueBeanDefinitionException extends NoSuchBeanDefinitionException {
 
     public NoUniqueBeanDefinitionException(Class<?> type, Collection<String> candidateNames) {
+        this(type, candidateNames, "mark one with @Primary, or choose one with @Qualifier");
+    }
+
+    public NoUniqueBeanDefinitionException(Class<?> type, Collection<String> candidateNames, String hint) {
         super("Expected a single bean of type " + type.getName()
-                + " but found " + candidateNames.size() + ": " + candidateNames);
+                + " but found " + candidateNames.size() + ": " + candidateNames + "; " + hint);
     }
 }

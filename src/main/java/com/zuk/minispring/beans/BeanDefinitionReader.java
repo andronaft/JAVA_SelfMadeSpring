@@ -1,6 +1,8 @@
 package com.zuk.minispring.beans;
 
 import com.zuk.minispring.annotation.Component;
+import com.zuk.minispring.annotation.Primary;
+import com.zuk.minispring.annotation.Qualifier;
 import com.zuk.minispring.annotation.Service;
 
 import java.util.List;
@@ -16,7 +18,9 @@ final class BeanDefinitionReader {
     }
 
     static List<BeanDefinition> read(Class<?> type) {
-        return List.of(new BeanDefinition(beanName(type), type));
+        Qualifier qualifier = type.getAnnotation(Qualifier.class);
+        return List.of(new BeanDefinition(beanName(type), type, type.isAnnotationPresent(Primary.class),
+                qualifier != null ? qualifier.value() : null));
     }
 
     static String beanName(Class<?> type) {

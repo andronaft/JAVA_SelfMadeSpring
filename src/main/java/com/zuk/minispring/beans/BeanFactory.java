@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -97,7 +98,7 @@ public class BeanFactory {
     }
 
     public <T> T getBean(Class<T> type) {
-        return getBean(determineCandidate(type, getBeanNamesForType(type)), type);
+        return getBean(findCandidate(type, null, null), type);
     }
 
     public <T> T getBean(String name, Class<T> type) {
@@ -283,7 +284,7 @@ public class BeanFactory {
     /** Resolves a dependency; on failure, says which bean needed it and where. */
     private Object resolve(String beanName, DependencyDescriptor dependency) {
         try {
-            return resolveDependency(dependency);
+            return resolveDependency(beanName, dependency);
         } catch (BeanCurrentlyInCreationException e) {
             throw e; // its message already names the whole cycle
         } catch (BeansException e) {
@@ -292,19 +293,75 @@ public class BeanFactory {
         }
     }
 
-    private Object resolveDependency(DependencyDescriptor dependency) {
-        String candidate = determineCandidate(dependency.type(), getBeanNamesForType(dependency.type()));
+    private Object resolveDependency(String beanName, DependencyDescriptor dependency) {
+        if (dependency.type() == List.class) {
+            return resolveList(beanName, dependency);
+        }
+        String candidate = findCandidate(dependency.type(), dependency.qualifier(), dependency.name());
         return getBean(candidate, dependency.type());
     }
 
-    private String determineCandidate(Class<?> type, List<String> candidates) {
+    /** Every bean of the element type, in registration order, except the bean being created (a composite can list its peers). */
+    private List<Object> resolveList(String beanName, DependencyDescriptor dependency) {
+        Class<?> elementType = elementType(dependency);
+        List<String> names = new ArrayList<>(qualified(getBeanNamesForType(elementType), dependency.qualifier()));
+        names.remove(beanName);
+        if (names.isEmpty()) {
+            throw new NoSuchBeanDefinitionException("No bean of type " + elementType.getName()
+                    + qualifierSuffix(dependency.qualifier()));
+        }
+        List<Object> beans = new ArrayList<>();
+        for (String name : names) {
+            beans.add(getBean(name, elementType));
+        }
+        return List.copyOf(beans);
+    }
+
+    private static Class<?> elementType(DependencyDescriptor dependency) {
+        if (dependency.genericType() instanceof ParameterizedType parameterized
+                && parameterized.getActualTypeArguments()[0] instanceof Class<?> elementType) {
+            return elementType;
+        }
+        throw new BeanCreationException("A List to inject must name its element type, like List<Notifier>, not "
+                + dependency.genericType().getTypeName());
+    }
+
+    /**
+     * Picks one bean of the type, the way Spring does: only the ones matching the qualifier (by bean name
+     * or @Qualifier on the bean); if several are left, the @Primary one; else the one named like the field.
+     */
+    private String findCandidate(Class<?> type, String qualifier, String dependencyName) {
+        List<String> candidates = qualified(getBeanNamesForType(type), qualifier);
         if (candidates.isEmpty()) {
-            throw new NoSuchBeanDefinitionException("No bean of type " + type.getName());
+            throw new NoSuchBeanDefinitionException("No bean of type " + type.getName() + qualifierSuffix(qualifier));
         }
-        if (candidates.size() > 1) {
-            throw new NoUniqueBeanDefinitionException(type, candidates);
+        if (candidates.size() == 1) {
+            return candidates.get(0);
         }
-        return candidates.get(0);
+        List<String> primary = candidates.stream().filter(name -> beanDefinitions.get(name).primary()).toList();
+        if (primary.size() == 1) {
+            return primary.get(0);
+        }
+        if (primary.size() > 1) {
+            throw new NoUniqueBeanDefinitionException(type, primary, "more than one of them is marked @Primary");
+        }
+        if (dependencyName != null && candidates.contains(dependencyName)) {
+            return dependencyName;
+        }
+        throw new NoUniqueBeanDefinitionException(type, candidates);
+    }
+
+    private List<String> qualified(List<String> candidates, String qualifier) {
+        if (qualifier == null) {
+            return candidates;
+        }
+        return candidates.stream()
+                .filter(name -> name.equals(qualifier) || qualifier.equals(beanDefinitions.get(name).qualifier()))
+                .toList();
+    }
+
+    private static String qualifierSuffix(String qualifier) {
+        return qualifier != null ? " with qualifier '" + qualifier + "'" : "";
     }
 
     /**

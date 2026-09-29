@@ -1,22 +1,47 @@
 package com.zuk.minispring.beans;
 
 import com.zuk.minispring.annotation.Autowired;
-import com.zuk.minispring.annotation.Component;
 import com.zuk.minispring.annotation.PreDestroy;
-import com.zuk.minispring.annotation.Service;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
 
+/**
+ * Keeps bean definitions and creates beans from them on demand. A bean's dependencies are
+ * created before the bean itself, so it always receives fully initialized dependencies,
+ * including the objects post-processors return in their place (proxies).
+ */
 public class BeanFactory {
-    private final Map<String, Object> singletons = new LinkedHashMap<>();
+    private final Map<String, BeanDefinition> beanDefinitions = new LinkedHashMap<>();
     private final List<BeanPostProcessor> postProcessors = new ArrayList<>();
+
+    // The three caches Spring's DefaultSingletonBeanRegistry uses to resolve circular references.
+    /** 1st level: fully initialized singletons, in creation order. */
+    private final Map<String, Object> singletonObjects = new LinkedHashMap<>();
+    /** 2nd level: singletons handed out before their initialization finished, to break a cycle. */
+    private final Map<String, Object> earlySingletonObjects = new HashMap<>();
+    /** 3rd level: factories for those early references, registered right after instantiation. */
+    private final Map<String, Supplier<Object>> singletonFactories = new HashMap<>();
+
+    /** The objects behind the singletons before any post-processor wrapped them; destroy callbacks run on these. */
+    private final Map<String, Object> rawSingletons = new LinkedHashMap<>();
+    /** Beans being created right now, in request order. Requesting one of them again means a cycle. */
+    private final Set<String> beansInCreation = new LinkedHashSet<>();
+
     private final ClassLoader classLoader;
 
     public BeanFactory() {
@@ -27,123 +52,110 @@ public class BeanFactory {
         this.classLoader = classLoader;
     }
 
-    public Object getBean(String beanName) {
-        Object bean = singletons.get(beanName);
-        if (bean == null) {
-            throw new NoSuchBeanDefinitionException("No bean named '" + beanName + "'");
+    /** Registers a definition for every @Component / @Service class in the package and its subpackages. */
+    public void scan(String basePackage) {
+        for (Class<?> type : new ClassPathScanner(classLoader).scan(basePackage)) {
+            if (BeanDefinitionReader.isComponent(type)) {
+                BeanDefinitionReader.read(type).forEach(this::registerBeanDefinition);
+            }
         }
-        return bean;
     }
 
-    public <T> T getBean(Class<T> type) {
-        return type.cast(singletons.get(findUniqueBeanName(type)));
+    public void registerBeanDefinition(BeanDefinition definition) {
+        BeanDefinition existing = beanDefinitions.putIfAbsent(definition.name(), definition);
+        if (existing != null) {
+            throw new BeanCreationException("Bean name '" + definition.name() + "' is used by both "
+                    + existing.beanType().getName() + " and " + definition.beanType().getName());
+        }
     }
 
     public void addPostProcessor(BeanPostProcessor postProcessor) {
         postProcessors.add(postProcessor);
     }
 
-    /** Scans the package and its subpackages and creates one instance of every @Component / @Service class. */
-    public void instantiate(String basePackage) {
-        for (Class<?> type : new ClassPathScanner(classLoader).scan(basePackage)) {
-            if (!type.isAnnotationPresent(Component.class) && !type.isAnnotationPresent(Service.class)) {
-                continue;
-            }
-            String beanName = type.getSimpleName();
-            if (singletons.containsKey(beanName)) {
-                throw new BeanCreationException("Bean name '" + beanName + "' is used by both "
-                        + singletons.get(beanName).getClass().getName() + " and " + type.getName());
-            }
-            singletons.put(beanName, createInstance(beanName, type));
+    /** Creates every singleton up front, as ApplicationContext.refresh() does in Spring, so wiring errors show up at startup. */
+    public void preInstantiateSingletons() {
+        for (String name : List.copyOf(beanDefinitions.keySet())) {
+            getBean(name);
         }
     }
 
-    /** Injects every @Autowired field with the single bean assignable to the field's type. */
-    public void populateProperties() {
-        for (Map.Entry<String, Object> entry : singletons.entrySet()) {
-            Object bean = entry.getValue();
-            for (Field field : bean.getClass().getDeclaredFields()) {
-                if (!field.isAnnotationPresent(Autowired.class)) {
-                    continue;
-                }
-                Object dependency;
-                try {
-                    dependency = singletons.get(findUniqueBeanName(field.getType()));
-                } catch (NoSuchBeanDefinitionException e) {
-                    throw new BeanCreationException("Cannot autowire field '" + field.getName()
-                            + "' of bean '" + entry.getKey() + "': " + e.getMessage(), e);
-                }
-                try {
-                    field.setAccessible(true);
-                    field.set(bean, dependency);
-                } catch (IllegalAccessException | RuntimeException e) {
-                    throw new BeanCreationException("Cannot autowire field '" + field.getName()
-                            + "' of bean '" + entry.getKey() + "'", e);
-                }
-            }
+    public Object getBean(String name) {
+        BeanDefinition definition = getBeanDefinition(name);
+        Object singleton = getSingleton(name);
+        if (singleton != null) {
+            return singleton;
+        }
+        beforeCreation(name);
+        try {
+            return createSingleton(name, definition);
+        } finally {
+            beansInCreation.remove(name);
+            earlySingletonObjects.remove(name);
+            singletonFactories.remove(name);
         }
     }
 
-    public void injectBeanNames() {
-        singletons.forEach((name, bean) -> {
-            if (bean instanceof BeanNameAware aware) {
-                aware.setBeanName(name);
+    public <T> T getBean(Class<T> type) {
+        return getBean(determineCandidate(type, getBeanNamesForType(type)), type);
+    }
+
+    public <T> T getBean(String name, Class<T> type) {
+        Object bean = getBean(name);
+        if (!type.isInstance(bean)) {
+            throw new BeanNotOfRequiredTypeException(name, type, bean.getClass());
+        }
+        return type.cast(bean);
+    }
+
+    public BeanDefinition getBeanDefinition(String name) {
+        BeanDefinition definition = beanDefinitions.get(name);
+        if (definition == null) {
+            throw new NoSuchBeanDefinitionException("No bean named '" + name + "'");
+        }
+        return definition;
+    }
+
+    public List<String> getBeanDefinitionNames() {
+        return List.copyOf(beanDefinitions.keySet());
+    }
+
+    /** Names of the beans whose definition is assignable to the type, in registration order. */
+    public List<String> getBeanNamesForType(Class<?> type) {
+        List<String> names = new ArrayList<>();
+        beanDefinitions.forEach((name, definition) -> {
+            if (type.isAssignableFrom(definition.beanType())) {
+                names.add(name);
             }
         });
+        return names;
+    }
+
+    /** Names of the singletons created so far, in creation order. */
+    public List<String> getSingletonNames() {
+        return List.copyOf(singletonObjects.keySet());
+    }
+
+    /** The class of the object behind a bean, looking through any proxy a post-processor put in front of it. */
+    public Class<?> getType(String name) {
+        Object raw = rawSingletons.get(name);
+        return raw != null ? raw.getClass() : getBeanDefinition(name).beanType();
     }
 
     /**
-     * Runs post-processors around the init callback. Whatever a post-processor returns
-     * replaces the bean in the registry, so it can wrap the bean in a proxy.
-     */
-    public void initializeBeans() {
-        for (Map.Entry<String, Object> entry : singletons.entrySet()) {
-            String name = entry.getKey();
-            Object bean = entry.getValue();
-
-            for (BeanPostProcessor postProcessor : postProcessors) {
-                bean = applyPostProcessor(bean, postProcessor.postProcessBeforeInitialization(bean, name));
-            }
-            if (bean instanceof InitializingBean initializingBean) {
-                try {
-                    initializingBean.afterPropertiesSet();
-                } catch (RuntimeException e) {
-                    throw new BeanCreationException("Initialization of bean '" + name + "' failed", e);
-                }
-            }
-            for (BeanPostProcessor postProcessor : postProcessors) {
-                bean = applyPostProcessor(bean, postProcessor.postProcessAfterInitialization(bean, name));
-            }
-            entry.setValue(bean);
-        }
-    }
-
-    /**
-     * Calls @PreDestroy methods and DisposableBean.destroy() on every bean. A failing bean
-     * doesn't stop the others from being destroyed; all failures are reported at the end.
+     * Calls @PreDestroy methods and DisposableBean.destroy() on every singleton, in reverse creation
+     * order, so a bean is destroyed before the beans it depends on. A failing bean doesn't stop the
+     * others from being destroyed; all failures are reported at the end.
      */
     public void close() {
         List<Throwable> failures = new ArrayList<>();
-        singletons.forEach((name, bean) -> {
-            for (Method method : bean.getClass().getMethods()) {
-                if (method.isAnnotationPresent(PreDestroy.class)) {
-                    try {
-                        method.invoke(bean);
-                    } catch (InvocationTargetException e) {
-                        failures.add(new BeansException("@PreDestroy method of bean '" + name + "' failed", e.getCause()));
-                    } catch (IllegalAccessException | IllegalArgumentException e) {
-                        failures.add(new BeansException("Cannot call @PreDestroy method of bean '" + name + "'", e));
-                    }
-                }
-            }
-            if (bean instanceof DisposableBean disposableBean) {
-                try {
-                    disposableBean.destroy();
-                } catch (RuntimeException e) {
-                    failures.add(new BeansException("destroy() of bean '" + name + "' failed", e));
-                }
-            }
-        });
+        List<String> names = new ArrayList<>(rawSingletons.keySet());
+        Collections.reverse(names);
+        for (String name : names) {
+            destroy(name, rawSingletons.get(name), failures);
+        }
+        rawSingletons.clear();
+        singletonObjects.clear();
         if (!failures.isEmpty()) {
             BeansException exception = new BeansException(failures.size() + " bean(s) failed to shut down");
             failures.forEach(exception::addSuppressed);
@@ -151,32 +163,141 @@ public class BeanFactory {
         }
     }
 
-    public Map<String, Object> getSingletons() {
-        return Collections.unmodifiableMap(singletons);
+    /** A finished singleton, or the early reference of one that is still being created (a cycle through fields). */
+    private Object getSingleton(String name) {
+        Object bean = singletonObjects.get(name);
+        if (bean == null && beansInCreation.contains(name)) {
+            bean = earlySingletonObjects.get(name);
+            if (bean == null) {
+                Supplier<Object> factory = singletonFactories.remove(name);
+                if (factory != null) {
+                    bean = factory.get();
+                    earlySingletonObjects.put(name, bean);
+                }
+            }
+        }
+        return bean;
     }
 
-    private Object createInstance(String beanName, Class<?> type) {
-        try {
-            var constructor = type.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return constructor.newInstance();
-        } catch (NoSuchMethodException e) {
-            throw new BeanCreationException("Bean '" + beanName + "' (" + type.getName()
-                    + ") needs a no-arg constructor", e);
-        } catch (InvocationTargetException e) {
-            throw new BeanCreationException("Constructor of bean '" + beanName + "' threw an exception", e.getCause());
-        } catch (ReflectiveOperationException | RuntimeException e) {
-            throw new BeanCreationException("Failed to instantiate bean '" + beanName + "'", e);
+    private void beforeCreation(String name) {
+        if (!beansInCreation.add(name)) {
+            List<String> path = new ArrayList<>(beansInCreation);
+            List<String> cycle = new ArrayList<>(path.subList(path.indexOf(name), path.size()));
+            cycle.add(name);
+            String requester = cycle.get(cycle.size() - 2);
+            throw new BeanCurrentlyInCreationException("Circular dependency: " + String.join(" -> ", cycle)
+                    + ". '" + requester + "' needs '" + name + "' before '" + name + "' is even constructed; inject '"
+                    + cycle.get(1) + "' into '" + name + "' through a field instead, so '" + name + "' can be created first");
         }
     }
 
-    private String findUniqueBeanName(Class<?> type) {
-        List<String> candidates = new ArrayList<>();
-        singletons.forEach((name, bean) -> {
-            if (type.isInstance(bean)) {
-                candidates.add(name);
+    private Object createSingleton(String name, BeanDefinition definition) {
+        Object bean = instantiate(name, definition);
+        // From here on the bean can be handed out early, before its fields are set.
+        singletonFactories.put(name, () -> bean);
+        populate(name, bean);
+        Object exposed = initialize(name, bean);
+
+        Object early = earlySingletonObjects.get(name);
+        if (early != null) {
+            if (exposed == bean) {
+                exposed = early;
+            } else if (exposed != early) {
+                throw new BeanCurrentlyInCreationException("Bean '" + name + "' was injected into other beans "
+                        + "before a post-processor replaced it with a " + exposed.getClass().getName()
+                        + ", so those beans hold the raw object. Break the circular dependency");
             }
-        });
+        }
+        singletonObjects.put(name, exposed);
+        rawSingletons.put(name, bean);
+        return exposed;
+    }
+
+    private Object instantiate(String name, BeanDefinition definition) {
+        Constructor<?> constructor = chooseConstructor(name, definition.beanType());
+        Object[] args = resolveArguments(name, constructor.getParameters(), "the constructor");
+        try {
+            constructor.setAccessible(true);
+            return constructor.newInstance(args);
+        } catch (InvocationTargetException e) {
+            throw new BeanCreationException("Constructor of bean '" + name + "' threw an exception", e.getCause());
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            throw new BeanCreationException("Failed to instantiate bean '" + name + "'", e);
+        }
+    }
+
+    /** The only constructor, else the @Autowired one, else the no-arg one. Spring picks the same way. */
+    private static Constructor<?> chooseConstructor(String name, Class<?> type) {
+        Constructor<?>[] constructors = type.getDeclaredConstructors();
+        if (constructors.length == 1) {
+            return constructors[0];
+        }
+        List<Constructor<?>> autowired = Arrays.stream(constructors)
+                .filter(constructor -> constructor.isAnnotationPresent(Autowired.class))
+                .toList();
+        if (autowired.size() > 1) {
+            throw new BeanCreationException("Bean '" + name + "' has " + autowired.size()
+                    + " @Autowired constructors; mark only one");
+        }
+        if (autowired.size() == 1) {
+            return autowired.get(0);
+        }
+        return Arrays.stream(constructors)
+                .filter(constructor -> constructor.getParameterCount() == 0)
+                .findFirst()
+                .orElseThrow(() -> new BeanCreationException("Bean '" + name + "' (" + type.getName() + ") has "
+                        + constructors.length + " constructors: mark one with @Autowired or add a no-arg constructor"));
+    }
+
+    private Object[] resolveArguments(String beanName, Parameter[] parameters, String owner) {
+        Object[] args = new Object[parameters.length];
+        for (int i = 0; i < parameters.length; i++) {
+            args[i] = resolve(beanName, DependencyDescriptor.forParameter(parameters[i], i, owner));
+        }
+        return args;
+    }
+
+    /** Injects @Autowired fields, starting with the ones declared in superclasses. */
+    private void populate(String name, Object bean) {
+        for (Class<?> type : hierarchy(bean.getClass())) {
+            for (Field field : type.getDeclaredFields()) {
+                if (!field.isAnnotationPresent(Autowired.class)) {
+                    continue;
+                }
+                if (Modifier.isStatic(field.getModifiers())) {
+                    throw new BeanCreationException("Cannot autowire static field '" + field.getName()
+                            + "' of bean '" + name + "'");
+                }
+                Object value = resolve(name, DependencyDescriptor.forField(field));
+                try {
+                    field.setAccessible(true);
+                    field.set(bean, value);
+                } catch (IllegalAccessException | RuntimeException e) {
+                    throw new BeanCreationException("Cannot autowire field '" + field.getName()
+                            + "' of bean '" + name + "'", e);
+                }
+            }
+        }
+    }
+
+    /** Resolves a dependency; on failure, says which bean needed it and where. */
+    private Object resolve(String beanName, DependencyDescriptor dependency) {
+        try {
+            return resolveDependency(dependency);
+        } catch (BeanCurrentlyInCreationException e) {
+            throw e; // its message already names the whole cycle
+        } catch (BeansException e) {
+            throw new BeanCreationException("Cannot autowire " + dependency.description() + " of bean '"
+                    + beanName + "': " + e.getMessage(), e);
+        }
+    }
+
+    private Object resolveDependency(DependencyDescriptor dependency) {
+        String candidate = determineCandidate(dependency.type(), getBeanNamesForType(dependency.type()));
+        return getBean(candidate, dependency.type());
+    }
+
+    private String determineCandidate(Class<?> type, List<String> candidates) {
         if (candidates.isEmpty()) {
             throw new NoSuchBeanDefinitionException("No bean of type " + type.getName());
         }
@@ -184,6 +305,61 @@ public class BeanFactory {
             throw new NoUniqueBeanDefinitionException(type, candidates);
         }
         return candidates.get(0);
+    }
+
+    /**
+     * Runs post-processors around the init callback. Whatever a post-processor returns
+     * replaces the bean, so it can wrap the bean in a proxy.
+     */
+    private Object initialize(String name, Object bean) {
+        if (bean instanceof BeanNameAware aware) {
+            aware.setBeanName(name);
+        }
+        Object current = bean;
+        for (BeanPostProcessor postProcessor : postProcessors) {
+            current = applyPostProcessor(current, postProcessor.postProcessBeforeInitialization(current, name));
+        }
+        if (current instanceof InitializingBean initializingBean) {
+            try {
+                initializingBean.afterPropertiesSet();
+            } catch (RuntimeException e) {
+                throw new BeanCreationException("Initialization of bean '" + name + "' failed", e);
+            }
+        }
+        for (BeanPostProcessor postProcessor : postProcessors) {
+            current = applyPostProcessor(current, postProcessor.postProcessAfterInitialization(current, name));
+        }
+        return current;
+    }
+
+    private static void destroy(String name, Object bean, List<Throwable> failures) {
+        for (Method method : bean.getClass().getMethods()) {
+            if (method.isAnnotationPresent(PreDestroy.class)) {
+                try {
+                    method.invoke(bean);
+                } catch (InvocationTargetException e) {
+                    failures.add(new BeansException("@PreDestroy method of bean '" + name + "' failed", e.getCause()));
+                } catch (IllegalAccessException | IllegalArgumentException e) {
+                    failures.add(new BeansException("Cannot call @PreDestroy method of bean '" + name + "'", e));
+                }
+            }
+        }
+        if (bean instanceof DisposableBean disposableBean) {
+            try {
+                disposableBean.destroy();
+            } catch (RuntimeException e) {
+                failures.add(new BeansException("destroy() of bean '" + name + "' failed", e));
+            }
+        }
+    }
+
+    /** The class and its superclasses, top-most first. */
+    private static List<Class<?>> hierarchy(Class<?> type) {
+        List<Class<?>> classes = new ArrayList<>();
+        for (Class<?> current = type; current != null && current != Object.class; current = current.getSuperclass()) {
+            classes.add(0, current);
+        }
+        return classes;
     }
 
     /** Like Spring, a post-processor that returns null keeps the current bean. */

@@ -11,9 +11,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
@@ -32,7 +32,8 @@ class ClassPathScanner {
 
     List<Class<?>> scan(String basePackage) {
         String packagePath = basePackage.replace('.', '/');
-        Set<String> classNames = new LinkedHashSet<>();
+        // Sorted, so beans are registered in the same order on every file system.
+        Set<String> classNames = new TreeSet<>();
         try {
             Enumeration<URL> resources = classLoader.getResources(packagePath);
             for (URL resource : Collections.list(resources)) {

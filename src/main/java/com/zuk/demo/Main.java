@@ -12,15 +12,13 @@ public class Main {
         runApplicationContext();
     }
 
-    /** Walks through every lifecycle phase manually, with a custom BeanPostProcessor. */
+    /** Drives a bare BeanFactory by hand, with a custom BeanPostProcessor. */
     private static void runBeanFactoryStepByStep() {
         System.out.println("==== BeanFactory, step by step ====");
         BeanFactory beanFactory = new BeanFactory();
         beanFactory.addPostProcessor(new CustomPostProcessor());
-        beanFactory.instantiate(BASE_PACKAGE);
-        beanFactory.populateProperties();
-        beanFactory.injectBeanNames();
-        beanFactory.initializeBeans();
+        beanFactory.scan(BASE_PACKAGE);
+        beanFactory.preInstantiateSingletons();
 
         ProductService productService = beanFactory.getBean(ProductService.class);
         PromotionsService promotionsService = productService.getPromotionsService();

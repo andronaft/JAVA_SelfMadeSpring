@@ -12,6 +12,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Stream;
@@ -43,11 +44,11 @@ class JarScanningTest {
 
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jar.toUri().toURL()}, getClass().getClassLoader())) {
             BeanFactory beanFactory = new BeanFactory(classLoader);
-            beanFactory.instantiate("jarbeans");
+            beanFactory.scan("jarbeans");
 
-            assertEquals(2, beanFactory.getSingletons().size());
-            assertEquals("jarbeans.JarBean", beanFactory.getBean("JarBean").getClass().getName());
-            assertEquals("jarbeans.sub.NestedJarBean", beanFactory.getBean("NestedJarBean").getClass().getName());
+            assertEquals(List.of("jarBean", "nestedJarBean"), beanFactory.getBeanDefinitionNames());
+            assertEquals("jarbeans.JarBean", beanFactory.getBean("jarBean").getClass().getName());
+            assertEquals("jarbeans.sub.NestedJarBean", beanFactory.getBean("nestedJarBean").getClass().getName());
         }
     }
 

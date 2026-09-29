@@ -25,7 +25,7 @@ class ApplicationContextTest {
         try (ApplicationContext context = new ApplicationContext(LIFECYCLE)) {
             OrderService orderService = context.getBean(OrderService.class);
             assertInstanceOf(OrderRepository.class, orderService.getOrderRepository());
-            assertEquals("OrderService", orderService.getBeanName());
+            assertEquals("orderService", orderService.getBeanName());
             assertTrue(LifecycleLog.events().contains("OrderService.afterPropertiesSet"));
         }
     }
@@ -42,9 +42,29 @@ class ApplicationContextTest {
     }
 
     @Test
+    void closingTwiceRunsCallbacksOnce() {
+        ApplicationContext context = new ApplicationContext(LIFECYCLE);
+        LifecycleLog.clear();
+
+        context.close();
+        context.close();
+
+        assertEquals(3, LifecycleLog.events().size(), LifecycleLog.events().toString());
+    }
+
+    @Test
     void startupFailsWithClearErrorWhenDependencyIsMissing() {
         BeanCreationException e = assertThrows(BeanCreationException.class,
                 () -> new ApplicationContext("com.zuk.minispring.fixtures.missing"));
         assertTrue(e.getMessage().contains("No bean of type com.zuk.minispring.fixtures.missing.Clock"), e.getMessage());
+    }
+
+    @Test
+    void failedStartupDestroysTheBeansCreatedSoFar() {
+        BeanCreationException e = assertThrows(BeanCreationException.class,
+                () -> new ApplicationContext("com.zuk.minispring.fixtures.failing"));
+
+        assertTrue(e.getMessage().contains("Initialization of bean 'migrator' failed"), e.getMessage());
+        assertEquals(List.of("Database.destroy"), LifecycleLog.events());
     }
 }

@@ -1,6 +1,7 @@
 package com.zuk.minispring.context;
 
 import com.zuk.minispring.beans.BeanFactory;
+import com.zuk.minispring.beans.BeanPostProcessor;
 import com.zuk.minispring.beans.PropertyResolver;
 
 import java.lang.reflect.ParameterizedType;
@@ -28,6 +29,7 @@ public class ApplicationContext implements AutoCloseable {
         beanFactory = new BeanFactory(Thread.currentThread().getContextClassLoader(), propertyResolver);
         try {
             beanFactory.scan(basePackage);
+            registerBeanPostProcessors();
             beanFactory.preInstantiateSingletons();
         } catch (RuntimeException e) {
             try {
@@ -36,6 +38,17 @@ public class ApplicationContext implements AutoCloseable {
                 e.addSuppressed(closeFailure);
             }
             throw e;
+        }
+    }
+
+    /**
+     * Creates the beans that are BeanPostProcessors before any other bean, so they can process all
+     * the others, as Spring's refresh() does. Whatever those post-processors depend on is created
+     * early too and misses them, which is why a post-processor is best declared by a static @Bean method.
+     */
+    private void registerBeanPostProcessors() {
+        for (String name : beanFactory.getBeanNamesForType(BeanPostProcessor.class)) {
+            beanFactory.addPostProcessor(beanFactory.getBean(name, BeanPostProcessor.class));
         }
     }
 

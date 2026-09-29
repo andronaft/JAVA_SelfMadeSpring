@@ -216,23 +216,35 @@ public class BeanFactory {
     private Object createSingleton(String name, BeanDefinition definition) {
         Object bean = instantiate(name, definition);
         // From here on the bean can be handed out early, before its fields are set.
-        singletonFactories.put(name, () -> bean);
+        singletonFactories.put(name, () -> getEarlyBeanReference(name, bean));
         populate(name, bean);
         Object exposed = initialize(name, bean);
 
         Object early = earlySingletonObjects.get(name);
         if (early != null) {
             if (exposed == bean) {
-                exposed = early;
+                exposed = early; // the proxy handed out early, if a post-processor made one
             } else if (exposed != early) {
                 throw new BeanCurrentlyInCreationException("Bean '" + name + "' was injected into other beans "
                         + "before a post-processor replaced it with a " + exposed.getClass().getName()
-                        + ", so those beans hold the raw object. Break the circular dependency");
+                        + ", so those beans hold a different object. Break the circular dependency, or create the "
+                        + "replacement in SmartInstantiationAwareBeanPostProcessor.getEarlyBeanReference");
             }
         }
         singletonObjects.put(name, exposed);
         rawSingletons.put(name, bean);
         return exposed;
+    }
+
+    /** What a bean in a cycle receives: the raw bean, or a proxy a smart post-processor makes for it now. */
+    private Object getEarlyBeanReference(String name, Object bean) {
+        Object reference = bean;
+        for (BeanPostProcessor postProcessor : postProcessors) {
+            if (postProcessor instanceof SmartInstantiationAwareBeanPostProcessor smart) {
+                reference = applyPostProcessor(reference, smart.getEarlyBeanReference(reference, name));
+            }
+        }
+        return reference;
     }
 
     /** Like Spring, the container doesn't keep prototypes, so it never calls their destroy callbacks. */

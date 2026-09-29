@@ -7,9 +7,9 @@ import java.lang.annotation.Target;
 
 /**
  * On a field or parameter: inject the bean with this name or this qualifier.
- * On a bean class: give the bean a qualifier that injection points can ask for.
+ * On a bean class or @Bean method: give the bean a qualifier that injection points can ask for.
  */
-@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Qualifier {
     String value();

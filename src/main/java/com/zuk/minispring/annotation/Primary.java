@@ -5,8 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** When several beans match an injection point, this one wins. */
-@Target(ElementType.TYPE)
+/** When several beans match an injection point, this one wins. Goes on a bean class or a @Bean method. */
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Primary {
 }

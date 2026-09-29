@@ -2,6 +2,7 @@ package com.zuk.minispring.beans;
 
 import com.zuk.minispring.annotation.Autowired;
 import com.zuk.minispring.annotation.PreDestroy;
+import com.zuk.minispring.annotation.Value;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -44,16 +45,26 @@ public class BeanFactory {
     private final Set<String> beansInCreation = new LinkedHashSet<>();
 
     private final ClassLoader classLoader;
+    private final PropertyResolver propertyResolver;
 
     public BeanFactory() {
         this(Thread.currentThread().getContextClassLoader());
     }
 
+    /** @Value properties come from application.properties on the class path and from system properties. */
     public BeanFactory(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+        this(classLoader, PropertyResolver.fromClasspath(classLoader));
     }
 
-    /** Registers a definition for every @Component / @Service class in the package and its subpackages. */
+    public BeanFactory(ClassLoader classLoader, PropertyResolver propertyResolver) {
+        this.classLoader = classLoader;
+        this.propertyResolver = propertyResolver;
+    }
+
+    /**
+     * Registers a definition for every @Component, @Service and @Configuration class in the package
+     * and its subpackages, plus one for every @Bean method of the @Configuration classes.
+     */
     public void scan(String basePackage) {
         for (Class<?> type : new ClassPathScanner(classLoader).scan(basePackage)) {
             if (BeanDefinitionReader.isComponent(type)) {
@@ -215,6 +226,9 @@ public class BeanFactory {
     }
 
     private Object instantiate(String name, BeanDefinition definition) {
+        if (definition.factoryMethod() != null) {
+            return invokeFactoryMethod(name, definition);
+        }
         Constructor<?> constructor = chooseConstructor(name, definition.beanType());
         Object[] args = resolveArguments(name, constructor.getParameters(), "the constructor");
         try {
@@ -225,6 +239,37 @@ public class BeanFactory {
         } catch (ReflectiveOperationException | RuntimeException e) {
             throw new BeanCreationException("Failed to instantiate bean '" + name + "'", e);
         }
+    }
+
+    /**
+     * Calls the @Bean method with its parameters resolved like constructor arguments. A non-static
+     * method runs on its @Configuration bean, which is created first if needed. Unlike Spring, the
+     * configuration class isn't subclassed with CGLIB, so one @Bean method calling another directly
+     * gets a new object; ask for the other bean as a parameter instead.
+     */
+    private Object invokeFactoryMethod(String name, BeanDefinition definition) {
+        Method method = definition.factoryMethod();
+        Object configuration = null;
+        if (definition.factoryBeanName() != null) {
+            configuration = getBean(definition.factoryBeanName());
+            if (!method.getDeclaringClass().isInstance(configuration)) {
+                configuration = rawSingletons.get(definition.factoryBeanName()); // a proxy stands in front of it
+            }
+        }
+        Object[] args = resolveArguments(name, method.getParameters(), "@Bean method '" + method.getName() + "'");
+        Object bean;
+        try {
+            method.setAccessible(true);
+            bean = method.invoke(configuration, args);
+        } catch (InvocationTargetException e) {
+            throw new BeanCreationException("@Bean method '" + method.getName() + "' threw an exception", e.getCause());
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            throw new BeanCreationException("Cannot call @Bean method '" + method.getName() + "'", e);
+        }
+        if (bean == null) {
+            throw new BeanCreationException("@Bean method '" + method.getName() + "' returned null");
+        }
+        return bean;
     }
 
     /** The only constructor, else the @Autowired one, else the no-arg one. Spring picks the same way. */
@@ -258,15 +303,15 @@ public class BeanFactory {
         return args;
     }
 
-    /** Injects @Autowired fields, starting with the ones declared in superclasses. */
+    /** Injects @Autowired and @Value fields, starting with the ones declared in superclasses. */
     private void populate(String name, Object bean) {
         for (Class<?> type : hierarchy(bean.getClass())) {
             for (Field field : type.getDeclaredFields()) {
-                if (!field.isAnnotationPresent(Autowired.class)) {
+                if (!field.isAnnotationPresent(Autowired.class) && !field.isAnnotationPresent(Value.class)) {
                     continue;
                 }
                 if (Modifier.isStatic(field.getModifiers())) {
-                    throw new BeanCreationException("Cannot autowire static field '" + field.getName()
+                    throw new BeanCreationException("Cannot inject static field '" + field.getName()
                             + "' of bean '" + name + "'");
                 }
                 Object value = resolve(name, DependencyDescriptor.forField(field));
@@ -274,7 +319,7 @@ public class BeanFactory {
                     field.setAccessible(true);
                     field.set(bean, value);
                 } catch (IllegalAccessException | RuntimeException e) {
-                    throw new BeanCreationException("Cannot autowire field '" + field.getName()
+                    throw new BeanCreationException("Cannot inject field '" + field.getName()
                             + "' of bean '" + name + "'", e);
                 }
             }
@@ -288,12 +333,15 @@ public class BeanFactory {
         } catch (BeanCurrentlyInCreationException e) {
             throw e; // its message already names the whole cycle
         } catch (BeansException e) {
-            throw new BeanCreationException("Cannot autowire " + dependency.description() + " of bean '"
+            throw new BeanCreationException("Cannot inject " + dependency.description() + " of bean '"
                     + beanName + "': " + e.getMessage(), e);
         }
     }
 
     private Object resolveDependency(String beanName, DependencyDescriptor dependency) {
+        if (dependency.value() != null) {
+            return propertyResolver.resolve(dependency.value(), dependency.type());
+        }
         if (dependency.type() == List.class) {
             return resolveList(beanName, dependency);
         }

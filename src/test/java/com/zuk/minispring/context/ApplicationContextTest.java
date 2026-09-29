@@ -2,12 +2,15 @@ package com.zuk.minispring.context;
 
 import com.zuk.minispring.beans.BeanCreationException;
 import com.zuk.minispring.fixtures.LifecycleLog;
+import com.zuk.minispring.fixtures.config.Greeting;
+import com.zuk.minispring.fixtures.config.MailSettings;
 import com.zuk.minispring.fixtures.lifecycle.OrderRepository;
 import com.zuk.minispring.fixtures.lifecycle.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -57,6 +60,25 @@ class ApplicationContextTest {
         BeanCreationException e = assertThrows(BeanCreationException.class,
                 () -> new ApplicationContext("com.zuk.minispring.fixtures.missing"));
         assertTrue(e.getMessage().contains("No bean of type com.zuk.minispring.fixtures.missing.Clock"), e.getMessage());
+    }
+
+    @Test
+    void valuesComeFromApplicationPropertiesOnTheClasspath() {
+        try (ApplicationContext context = new ApplicationContext("com.zuk.minispring.fixtures.config")) {
+            assertEquals("Hello from application.properties", context.getBean(Greeting.class).text());
+            assertEquals("smtp.from-file.test", context.getBean(MailSettings.class).getHost());
+        }
+    }
+
+    @Test
+    void explicitPropertiesReplaceApplicationProperties() {
+        Properties properties = new Properties();
+        properties.setProperty("mail.host", "smtp.explicit.test");
+
+        try (ApplicationContext context = new ApplicationContext("com.zuk.minispring.fixtures.config", properties)) {
+            assertEquals("Hello", context.getBean(Greeting.class).text());
+            assertEquals("smtp.explicit.test", context.getBean(MailSettings.class).getHost());
+        }
     }
 
     @Test

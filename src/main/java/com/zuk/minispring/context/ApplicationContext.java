@@ -1,16 +1,31 @@
 package com.zuk.minispring.context;
 
 import com.zuk.minispring.beans.BeanFactory;
+import com.zuk.minispring.beans.PropertyResolver;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Properties;
 
 public class ApplicationContext implements AutoCloseable {
-    private final BeanFactory beanFactory = new BeanFactory();
+    private final BeanFactory beanFactory;
     private boolean closed;
 
-    /** Scans the package and creates every singleton. If that fails, the beans created so far are destroyed. */
+    /**
+     * Scans the package and creates every singleton. @Value properties come from application.properties
+     * on the class path and from system properties. If startup fails, the beans created so far are destroyed.
+     */
     public ApplicationContext(String basePackage) {
+        this(basePackage, PropertyResolver.fromClasspath(Thread.currentThread().getContextClassLoader()));
+    }
+
+    /** Like {@link #ApplicationContext(String)}, with the given properties for @Value. */
+    public ApplicationContext(String basePackage, Properties properties) {
+        this(basePackage, new PropertyResolver(properties));
+    }
+
+    private ApplicationContext(String basePackage, PropertyResolver propertyResolver) {
+        beanFactory = new BeanFactory(Thread.currentThread().getContextClassLoader(), propertyResolver);
         try {
             beanFactory.scan(basePackage);
             beanFactory.preInstantiateSingletons();

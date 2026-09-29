@@ -1,0 +1,16 @@
+package com.zuk.minispring.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * "singleton" (the default): one shared instance. "prototype": a new instance for every
+ * getBean() call and every injection point; the container doesn't destroy prototypes.
+ */
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Scope {
+    String value();
+}

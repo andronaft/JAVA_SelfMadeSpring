@@ -9,20 +9,36 @@ import java.util.Objects;
  *
  * @param name            unique bean name
  * @param beanType        the class to instantiate, or the return type of the @Bean method
+ * @param scope           {@link #SCOPE_SINGLETON} or {@link #SCOPE_PROTOTYPE}
  * @param primary         wins when several beans match an injection point (@Primary)
  * @param qualifier       extra name injection points can ask for with @Qualifier; may be null
  * @param factoryMethod   the @Bean method that creates the bean; null if the constructor does
  * @param factoryBeanName the @Configuration bean to call the method on; null for a static method
  */
-public record BeanDefinition(String name, Class<?> beanType, boolean primary, String qualifier,
+public record BeanDefinition(String name, Class<?> beanType, String scope, boolean primary, String qualifier,
                              Method factoryMethod, String factoryBeanName) {
+
+    public static final String SCOPE_SINGLETON = "singleton";
+    public static final String SCOPE_PROTOTYPE = "prototype";
 
     public BeanDefinition {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(beanType, "beanType");
+        if (!SCOPE_SINGLETON.equals(scope) && !SCOPE_PROTOTYPE.equals(scope)) {
+            throw new BeanCreationException("Bean '" + name + "' has unknown scope '" + scope
+                    + "'; use \"" + SCOPE_SINGLETON + "\" or \"" + SCOPE_PROTOTYPE + "\"");
+        }
     }
 
     public BeanDefinition(String name, Class<?> beanType) {
-        this(name, beanType, false, null, null, null);
+        this(name, beanType, SCOPE_SINGLETON, false, null, null, null);
+    }
+
+    public boolean isSingleton() {
+        return SCOPE_SINGLETON.equals(scope);
+    }
+
+    public boolean isPrototype() {
+        return SCOPE_PROTOTYPE.equals(scope);
     }
 }

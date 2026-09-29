@@ -5,6 +5,7 @@ import com.zuk.minispring.annotation.Component;
 import com.zuk.minispring.annotation.Configuration;
 import com.zuk.minispring.annotation.Primary;
 import com.zuk.minispring.annotation.Qualifier;
+import com.zuk.minispring.annotation.Scope;
 import com.zuk.minispring.annotation.Service;
 
 import java.lang.reflect.AnnotatedElement;
@@ -29,8 +30,8 @@ final class BeanDefinitionReader {
     static List<BeanDefinition> read(Class<?> type) {
         String name = beanName(type);
         List<BeanDefinition> definitions = new ArrayList<>();
-        definitions.add(new BeanDefinition(name, type, type.isAnnotationPresent(Primary.class), qualifier(type),
-                null, null));
+        definitions.add(new BeanDefinition(name, type, scope(type), type.isAnnotationPresent(Primary.class),
+                qualifier(type), null, null));
         if (type.isAnnotationPresent(Configuration.class)) {
             for (Method method : beanMethods(type)) {
                 definitions.add(forBeanMethod(name, method));
@@ -60,8 +61,13 @@ final class BeanDefinitionReader {
         String explicit = method.getAnnotation(Bean.class).value();
         boolean isStatic = Modifier.isStatic(method.getModifiers());
         return new BeanDefinition(explicit.isEmpty() ? method.getName() : explicit, method.getReturnType(),
-                method.isAnnotationPresent(Primary.class), qualifier(method), method,
+                scope(method), method.isAnnotationPresent(Primary.class), qualifier(method), method,
                 isStatic ? null : configurationName);
+    }
+
+    private static String scope(AnnotatedElement element) {
+        Scope scope = element.getAnnotation(Scope.class);
+        return scope != null ? scope.value() : BeanDefinition.SCOPE_SINGLETON;
     }
 
     private static String qualifier(AnnotatedElement element) {

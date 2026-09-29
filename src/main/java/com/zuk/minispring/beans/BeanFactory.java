@@ -88,19 +88,24 @@ public class BeanFactory {
     /** Creates every singleton up front, as ApplicationContext.refresh() does in Spring, so wiring errors show up at startup. */
     public void preInstantiateSingletons() {
         for (String name : List.copyOf(beanDefinitions.keySet())) {
-            getBean(name);
+            if (beanDefinitions.get(name).isSingleton()) {
+                getBean(name);
+            }
         }
     }
 
+    /** The shared instance of a singleton, or a new instance of a prototype. */
     public Object getBean(String name) {
         BeanDefinition definition = getBeanDefinition(name);
-        Object singleton = getSingleton(name);
-        if (singleton != null) {
-            return singleton;
+        if (definition.isSingleton()) {
+            Object singleton = getSingleton(name);
+            if (singleton != null) {
+                return singleton;
+            }
         }
         beforeCreation(name);
         try {
-            return createSingleton(name, definition);
+            return definition.isSingleton() ? createSingleton(name, definition) : createPrototype(name, definition);
         } finally {
             beansInCreation.remove(name);
             earlySingletonObjects.remove(name);
@@ -196,10 +201,15 @@ public class BeanFactory {
             List<String> path = new ArrayList<>(beansInCreation);
             List<String> cycle = new ArrayList<>(path.subList(path.indexOf(name), path.size()));
             cycle.add(name);
+            String message = "Circular dependency: " + String.join(" -> ", cycle) + ". ";
+            if (getBeanDefinition(name).isPrototype()) {
+                throw new BeanCurrentlyInCreationException(message + "'" + name + "' is a prototype, so every request "
+                        + "for it creates a new instance, which needs yet another one, without end");
+            }
             String requester = cycle.get(cycle.size() - 2);
-            throw new BeanCurrentlyInCreationException("Circular dependency: " + String.join(" -> ", cycle)
-                    + ". '" + requester + "' needs '" + name + "' before '" + name + "' is even constructed; inject '"
-                    + cycle.get(1) + "' into '" + name + "' through a field instead, so '" + name + "' can be created first");
+            throw new BeanCurrentlyInCreationException(message + "'" + requester + "' needs '" + name + "' before '"
+                    + name + "' is even constructed; inject '" + cycle.get(1) + "' into '" + name
+                    + "' through a field instead, so '" + name + "' can be created first");
         }
     }
 
@@ -223,6 +233,13 @@ public class BeanFactory {
         singletonObjects.put(name, exposed);
         rawSingletons.put(name, bean);
         return exposed;
+    }
+
+    /** Like Spring, the container doesn't keep prototypes, so it never calls their destroy callbacks. */
+    private Object createPrototype(String name, BeanDefinition definition) {
+        Object bean = instantiate(name, definition);
+        populate(name, bean);
+        return initialize(name, bean);
     }
 
     private Object instantiate(String name, BeanDefinition definition) {

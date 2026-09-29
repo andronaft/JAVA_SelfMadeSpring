@@ -1,4 +1,4 @@
-package com.zuk.demo;
+package com.zuk.demo.lifecycle;
 
 import com.zuk.minispring.beans.BeanPostProcessor;
 

@@ -122,7 +122,7 @@ public class TimedBeanPostProcessor implements SmartInstantiationAwareBeanPostPr
 
         private Object call(Method method, Object[] args) throws Throwable {
             try {
-                method.setAccessible(true);
+                method.trySetAccessible(); // for a non-public interface; a public one works without it
                 return method.invoke(target, args);
             } catch (InvocationTargetException e) {
                 throw e.getCause(); // the caller sees the bean's own exception, not the reflection wrapper

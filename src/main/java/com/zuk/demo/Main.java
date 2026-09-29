@@ -1,23 +1,26 @@
 package com.zuk.demo;
 
+import com.zuk.demo.lifecycle.CustomPostProcessor;
+import com.zuk.demo.lifecycle.ProductService;
+import com.zuk.demo.lifecycle.PromotionsService;
+import com.zuk.demo.shop.Cart;
+import com.zuk.demo.shop.Checkout;
 import com.zuk.minispring.beans.BeanFactory;
 import com.zuk.minispring.context.ApplicationContext;
 
 public class Main {
 
-    private static final String BASE_PACKAGE = "com.zuk.demo";
-
     public static void main(String[] args) {
         runBeanFactoryStepByStep();
-        runApplicationContext();
+        runShop();
     }
 
-    /** Drives a bare BeanFactory by hand, with a custom BeanPostProcessor. */
+    /** Drives a bare BeanFactory by hand, with a custom BeanPostProcessor, to show the lifecycle order. */
     private static void runBeanFactoryStepByStep() {
         System.out.println("==== BeanFactory, step by step ====");
         BeanFactory beanFactory = new BeanFactory();
         beanFactory.addPostProcessor(new CustomPostProcessor());
-        beanFactory.scan(BASE_PACKAGE);
+        beanFactory.scan("com.zuk.demo.lifecycle");
         beanFactory.preInstantiateSingletons();
 
         ProductService productService = beanFactory.getBean(ProductService.class);
@@ -27,13 +30,17 @@ public class Main {
         beanFactory.close();
     }
 
-    /** The same lifecycle hidden behind an ApplicationContext, plus the ContextClosedEvent on close. */
-    private static void runApplicationContext() {
+    /** An ApplicationContext with the rest of the features: @Configuration, @Value, qualifiers, prototypes, @Timed. */
+    private static void runShop() {
         System.out.println();
         System.out.println("==== ApplicationContext ====");
-        try (ApplicationContext context = new ApplicationContext(BASE_PACKAGE)) {
-            ProductService productService = context.getBean(ProductService.class);
-            System.out.println("ProductService has PromotionsService: " + (productService.getPromotionsService() != null));
+        try (ApplicationContext context = new ApplicationContext("com.zuk.demo.shop")) {
+            Checkout checkout = context.getBean(Checkout.class);
+            System.out.println("Quote with the @Primary discount: " + checkout.quote("book"));
+            System.out.println("@Qualifier(\"loyal\") discount on 200: " + checkout.loyalPrice(200));
+            System.out.println("List<DiscountPolicy>: " + checkout.discountNames());
+            System.out.println("Catalog injected into Checkout is a proxy: " + checkout.getCatalog().getClass().getName());
+            System.out.println("Prototype: two requests, two carts: " + (context.getBean(Cart.class) != context.getBean(Cart.class)));
         }
     }
 }
